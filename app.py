@@ -5,10 +5,10 @@ from tornado.web import Application as WebApplication
 from tornado.ioloop import IOLoop
 
 import config
-import handlers
 
 from database import Database
-
+from handlers.api import Api as ApiHandler
+from handlers.main import Main as MainHandler
 
 log = logging.getLogger('app')
 
@@ -22,16 +22,22 @@ class Application(WebApplication):
     def __init__(self, db):
         super().__init__(
             [
-                ('/', handlers.Main)
+                ('/', MainHandler),
+                ('/api', ApiHandler)
             ],
             static_path=os.path.join(os.path.dirname(__file__), 'client', 'web', 'build')
         )
 
         self._db = db
+        self._clients = {}
 
     @property
     def db(self):
         return self._db
+
+    @property
+    def clients(self):
+        return self._clients
 
 
 if __name__ == '__main__':

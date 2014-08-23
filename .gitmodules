@@ -1,0 +1,4 @@
+[submodule "client"]
+	path = client
+	url = git@github.com:tokwithme/client.git
+	branch = master

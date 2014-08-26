@@ -1,45 +1,41 @@
 import logging
-import os.path
+from os import path
 
 from tornado.web import Application as WebApplication
 from tornado.ioloop import IOLoop
 
 import config
 
-from database import Database
-from handlers.api import Api as ApiHandler
-from handlers.main import Main as MainHandler
+from api import Api
+from handlers.api_handler import ApiHandler
+from handlers.main_handler import MainHandler
+
 
 log = logging.getLogger('app')
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
-)
-
 
 class Application(WebApplication):
-    def __init__(self, db):
+    def __init__(self):
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+        )
+
         super().__init__(
             [
                 ('/', MainHandler),
                 ('/api', ApiHandler)
             ],
-            static_path=os.path.join(os.path.dirname(__file__), 'client', 'web', 'build')
+            static_path=path.join(path.dirname(__file__), 'client', 'web', 'build')
         )
 
-        self._db = db
-        self._clients = {}
+        self._api = Api()
 
     @property
-    def db(self):
-        return self._db
-
-    @property
-    def clients(self):
-        return self._clients
+    def api(self):
+        return self._api
 
 
 if __name__ == '__main__':
-    Application(Database()).listen(config.LISTEN_PORT, config.LISTEN_IP)
+    Application().listen(config.LISTEN_PORT, config.LISTEN_IP)
     IOLoop.instance().start()

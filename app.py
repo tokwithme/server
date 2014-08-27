@@ -7,8 +7,8 @@ from tornado.ioloop import IOLoop
 import config
 
 from api import Api
-from handlers.api_handler import ApiHandler
-from handlers.main_handler import MainHandler
+from handlers.api import ApiHandler
+from handlers.main import MainHandler
 
 
 log = logging.getLogger('app')
@@ -17,7 +17,7 @@ log = logging.getLogger('app')
 class Application(WebApplication):
     def __init__(self):
         logging.basicConfig(
-            level=logging.DEBUG,
+            level=logging.DEBUG if config.DEBUG else logging.INFO,
             format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
         )
 
@@ -26,7 +26,8 @@ class Application(WebApplication):
                 ('/', MainHandler),
                 ('/api', ApiHandler)
             ],
-            static_path=path.join(path.dirname(__file__), 'client', 'web', 'build')
+            static_path=path.join(path.dirname(__file__), 'client', 'web', 'build'),
+            debug=config.DEBUG
         )
 
         self._api = Api()

@@ -1,5 +1,7 @@
 from logging import getLogger
 import json
+import random
+import config
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -89,9 +91,15 @@ class Api():
             return
 
         matching = self._db.matching(handler.client.id, handler.client.self_gender, handler.client.other_gender)
+        result = []
 
-        Api._matching_response(handler, [str(match) for match in matching])
-        log.debug('Sent matching (%u) to %s' % (len(matching), handler.client.id))
+        while matching:
+            result.append(str(matching.pop(random.randrange(len(matching)))))
+            if len(result) == config.MATCHING_MAX_COUNT:
+                break
+
+        Api._matching_response(handler, result)
+        log.debug('Sent matching (%u) to %s' % (len(result), handler.client.id))
 
     def _send_request(self, handler, body):
         target_id = ''
@@ -113,9 +121,11 @@ class Api():
             return
 
         target = self._clients.get(target_id)
-        if target:
-            Api._data_response(target, handler.client.id, data)
+        if not target:
+            Api._send_response(handler, False, target_id, 'Nonexistent client')
+            return
 
+        Api._data_response(target, handler.client.id, data)
         Api._send_response(handler, True, target_id)
         log.debug('Sent message from %s to %s', handler.client.id, target_id)
 

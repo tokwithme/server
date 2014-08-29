@@ -68,6 +68,47 @@ class TestSendRequest(TestServer):
 
     @gen_test
     def test_incorrect_data(self):
+        connection1 = yield self._connect()
+
+        connection1.write_message(json.dumps({'join': {'self': 1, 'other': [2]}}))
+        response = yield connection1.read_message()
+
+        target_id = json.loads(response)['join']['id']
+
+        connection2 = yield self._connect()
+
+        connection2.write_message(json.dumps({'join': {'self': 1, 'other': [2]}}))
+        yield connection2.read_message()
+
+        connection2.write_message(json.dumps({'send': {'id': target_id, 'data': ''}}))
+        response = yield connection2.read_message()
+        self._test_error(json.loads(response), target_id)
+
+        connection2.write_message(json.dumps({'send': {'id': target_id, 'data': []}}))
+        response = yield connection2.read_message()
+        self._test_error(json.loads(response), target_id)
+
+        connection2.write_message(json.dumps({'send': {'id': target_id, 'data': {}}}))
+        response = yield connection2.read_message()
+        self._test_error(json.loads(response), target_id)
+
+        connection2.write_message(json.dumps({'send': {'id': target_id, 'data': True}}))
+        response = yield connection2.read_message()
+        self._test_error(json.loads(response), target_id)
+
+        connection2.write_message(json.dumps({'send': {'id': target_id, 'data': 1}}))
+        response = yield connection2.read_message()
+        self._test_error(json.loads(response), target_id)
+
+        connection2.write_message(json.dumps({'send': {'id': target_id, 'data': None}}))
+        response = yield connection2.read_message()
+        self._test_error(json.loads(response), target_id)
+
+        connection1.close()
+        connection2.close()
+
+    @gen_test
+    def test_nonexistent_id(self):
         connection = yield self._connect()
 
         connection.write_message(json.dumps({'join': {'self': 1, 'other': [2]}}))
@@ -75,27 +116,7 @@ class TestSendRequest(TestServer):
 
         target_id = str(ObjectId())
 
-        connection.write_message(json.dumps({'send': {'id': target_id, 'data': ''}}))
-        response = yield connection.read_message()
-        self._test_error(json.loads(response), target_id)
-
-        connection.write_message(json.dumps({'send': {'id': target_id, 'data': []}}))
-        response = yield connection.read_message()
-        self._test_error(json.loads(response), target_id)
-
-        connection.write_message(json.dumps({'send': {'id': target_id, 'data': {}}}))
-        response = yield connection.read_message()
-        self._test_error(json.loads(response), target_id)
-
-        connection.write_message(json.dumps({'send': {'id': target_id, 'data': True}}))
-        response = yield connection.read_message()
-        self._test_error(json.loads(response), target_id)
-
-        connection.write_message(json.dumps({'send': {'id': target_id, 'data': 1}}))
-        response = yield connection.read_message()
-        self._test_error(json.loads(response), target_id)
-
-        connection.write_message(json.dumps({'send': {'id': target_id, 'data': None}}))
+        connection.write_message(json.dumps({'send': {'id': target_id, 'data': 'test'}}))
         response = yield connection.read_message()
         self._test_error(json.loads(response), target_id)
 

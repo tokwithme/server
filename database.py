@@ -14,14 +14,12 @@ class Database:
         self._db = connection[config.DATABASE_NAME]
         connection.drop_database(self._db)
 
-        # TODO: Create index
+        self._db.clients.ensure_index('other')
 
     def join(self, self_gender, other_gender):
         document = {
-            'gender': {
-                'self': self_gender,
-                'other': other_gender
-            }
+            'self': self_gender,
+            'other': other_gender
         }
 
         return self._db.clients.insert(document)
@@ -32,8 +30,8 @@ class Database:
     def matching(self, client_id, self_gender, other_gender):
         spec = {
             '_id': {'$ne': client_id},
-            'gender.self': {'$in': other_gender},
-            'gender.other': self_gender
+            'self': {'$in': other_gender},
+            'other': self_gender
         }
 
         return [match['_id'] for match in self._db.clients.find(spec, fields=[])]
